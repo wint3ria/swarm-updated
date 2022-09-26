@@ -1,0 +1,27 @@
+{
+  "name": "swarm-updated",
+  "version": "1.0.0",
+  "description": "Update Docker services based on rolled configurations. Detect configuration changes from a source directory",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/wint3ria/swarm-updated.git"
+  },
+  "keywords": [
+    "docker",
+    "swarm",
+    "secret",
+    "configs",
+    "node",
+    "update"
+  ],
+  "author": "Nicolas Misk",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/wint3ria/swarm-updated/issues"
+  },
+  "homepage": "https://github.com/wint3ria/swarm-updated#readme"
+}
