@@ -4,4 +4,4 @@ COPY . /app
 
 WORKDIR /app
 
-CMD node index.js
+CMD NODE_ENV=production node index.js
