@@ -27,7 +27,8 @@
   "dependencies": {
     "config": "^3.3.8",
     "dockerode": "^3.3.4",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "winston": "^3.8.2"
   },
   "type": "module"
 }

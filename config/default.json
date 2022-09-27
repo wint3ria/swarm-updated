@@ -2,5 +2,24 @@
   "docker": { "socketPath": "/var/run/docker.sock"},
   "secret_folder": {
     "testing": "./test_secrets"
-  }
+  },
+  "logging": {
+    "transport": {
+      "console": [
+        {
+          "level": "info",
+          "handleExceptions": true,
+          "json": false,
+          "colorize": true
+        }
+      ]
+    },
+    "exitOnError": false,
+    "formatters": [
+      "timestamp",
+      "splat",
+      "prettyPrint"
+    ]
+  },
+  "fileTouchDelay": 5000
 }
