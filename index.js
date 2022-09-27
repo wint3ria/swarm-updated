@@ -30,15 +30,15 @@ function later(delay) {
 
 function generate_name(namespace, folder_path, filename) {
   const part1 = folder_path.trim()
-    .replace(" ", "_")
-    .replace("/", "_")
-    .replace(".", "")
-    .replace(/^_+|_+$/gm,'');
+    .replaceAll(" ", "_")
+    .replaceAll("/", "_")
+    .replaceAll(".", "")
+    .replaceAll(/^_+|_+$/gm,'');
   const part2 = filename.trim()
-    .replace(" ", "_")
-    .replace("/", "_")
-    .replace(".", "_")
-    .replace(/^_+|_+$/gm,'');
+    .replaceAll(" ", "_")
+    .replaceAll("/", "_")
+    .replaceAll(".", "_")
+    .replaceAll(/^_+|_+$/gm,'');
   const name = namespace + "_" + part1 + "_" + part2
   return name
 }

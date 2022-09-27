@@ -1,7 +1,8 @@
 {
   "docker": { "socketPath": "/var/run/docker.sock"},
   "secret_folder": {
-    "testing": "./test_secrets"
+    "testing": "./test_secrets",
+    "testing_nested": "./test_secrets/nested"
   },
   "logging": {
     "transport": {
