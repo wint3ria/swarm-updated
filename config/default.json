@@ -1,0 +1,6 @@
+{
+  "docker": { "socketPath": "/var/run/docker.sock"},
+  "secret_folder": {
+    "testing": "./test_secrets"
+  }
+}
