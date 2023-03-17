@@ -32,7 +32,7 @@ function generate_name(namespace, folder_path, filename) {
   const part1 = folder_path.trim()
     .replaceAll(" ", "_")
     .replaceAll("/", "_")
-    .replaceAll(".", "")
+    .replaceAll(".", "_")
     .replaceAll(/^_+|_+$/gm,'');
   const part2 = filename.trim()
     .replaceAll(" ", "_")
@@ -47,9 +47,11 @@ const secrets_folder = config.get("secret_folder")
 
 const docker = new Docker(config.get("docker"));
 
-const fileTouchDelay = config.get("fileTouchDelay")
+const updateInterval = config.get("updateInterval")
 
 const secrets_register = {}
+
+const updateTasks = []
 
 async function updateServiceSecret(oldSecret, newSecretId, serviceResponse, version) {
   const oldSecretTarget = serviceResponse.Spec.TaskTemplate.ContainerSpec.Secrets.find(
@@ -94,10 +96,13 @@ async function updateServiceSecret(oldSecret, newSecretId, serviceResponse, vers
 async function dockerSecretsUpdate (namespace, secret_name, folder_path, filename) {
   const secrets = await docker.listSecrets()
   const path = folder_path + "/" + filename
-  const existingSecret = secrets.find(secret => secret.Spec.Name.includes(secret_name))
   const buffer = await readFile(path)
   const content = buffer.toString("base64")
   const versionLabelName = "updated.swarm." + namespace
+  const existingSecrets = secrets.filter(secret => secret.Spec.Name.includes(secret_name))
+  existingSecrets.sort((a, b) => a.Spec.Name < b.Spec.Name ? -1 : 1);
+  const existingSecret = existingSecrets.at(-1);
+  const staleSecrets = await Promise.all(existingSecrets.slice(0, -1).map(async s => await docker.getSecret(s.ID)));
   if (existingSecret === undefined) {
     const labels = {};
     labels[versionLabelName] = "0"
@@ -106,7 +111,7 @@ async function dockerSecretsUpdate (namespace, secret_name, folder_path, filenam
   } else {
     logger.info("%s exists, updating from %s", secret_name, path)
     const labels = {};
-    const secret = docker.getSecret(existingSecret.ID)
+    const secret = await docker.getSecret(existingSecret.ID)
     const oldLabelVersion = existingSecret.Spec.Labels[versionLabelName]
     const labelVersion = String(parseInt(oldLabelVersion) + 1)
     logger.info("Updating secret %s from version %s to version %s", secret_name, oldLabelVersion, labelVersion)
@@ -119,14 +124,18 @@ async function dockerSecretsUpdate (namespace, secret_name, folder_path, filenam
       .filter(resp =>
         resp.Spec.TaskTemplate.ContainerSpec.Secrets.find(s => s.SecretName.includes(secret_name))
       )
-      .map(resp => updateServiceSecret(existingSecret, newSecretId, resp, labelVersion))
+      .map(resp =>  updateServiceSecret(existingSecret, newSecretId, resp, labelVersion))
     await Promise.all(updatePromises)
-    const newSecret = docker.getSecret(newSecretId)
+    logger.info("Done updating services using old secret %s.%s", secret_name, oldLabelVersion)
+    staleSecrets.push(secret)
+  }
 
+  for (let i = 0; i < staleSecrets.length; i++) {
     try {
-      await secret.remove()
+      logger.info("Removing stale secret: %s", existingSecrets[i].Spec.Name)
+      await staleSecrets[i].remove()
     } catch (err) {
-      console.error("Could not remove secret", secret.Name, err)
+      console.error("Could not remove secret: %s", existingSecrets[i].Spec.Name, err)
     }
   }
 }
@@ -151,24 +160,22 @@ async function file_event_handler(register, namespace, folder_path, eventType, f
   register[secret_name] = newActive
   if (newActive) {
     logger.info("Secret %s is active, performing docker operations", secret_name)
-    dockerSecretsUpdate(namespace, secret_name, folder_path, filename)
+    updateTasks.push({namespace, secret_name, folder_path, filename})
+    //await dockerSecretsUpdate(namespace, secret_name, folder_path, filename)
   }
-}
-
-async function scheduleTouchFiles(folder_path) {
-  const files = await readdir(folder_path)
-  logger.info("Folder %s contains the following files: %s", folder_path, files)
-  await Promise.all(files.map(async filename => {
-    logger.info("Waiting %d ms to touch file %s/%s", fileTouchDelay, folder_path, filename)
-    await later(fileTouchDelay)
-    logger.info("Touching file %s/%s", folder_path, filename)
-    const now = new Date()
-    await utimes(folder_path + "/" + filename, now, now)
-  }))
 }
 
 async function configure(namespace, folder_path) {
   logger.info("Configuring namespace %s, using folder %s", namespace, folder_path)
+
+  const files =  (await readdir(folder_path, {withFileTypes: true}))
+    .filter(e => e.isFile())
+    .map(e => e.name)
+  for (const filename of files) {
+    const secret_name = generate_name(namespace, folder_path, filename)
+    updateTasks.push({ namespace, secret_name, folder_path, filename })
+  }
+
   const watcher = watch(folder_path)
   for await (const event of watcher) {
     const { eventType, filename } = event
@@ -176,19 +183,29 @@ async function configure(namespace, folder_path) {
   }
 }
 
+async function scheduledUpdate() {
+  if (updateTasks.length === 0) {
+    logger.info("No updates to perform, rescheduled in %d ms", updateInterval);
+    return;
+  }
+  logger.info("Performing %d update...", updateTasks.length);
+  for (const task of updateTasks) {
+    const { namespace, secret_name, folder_path, filename } = task
+    await dockerSecretsUpdate(namespace, secret_name, folder_path, filename)
+  }
+  updateTasks.length = 0;
+  logger.info("Done updating");
+}
+
 logger.info("Launching Swarm Updated")
 
-Promise.all(Object.keys(secrets_folder).map(
+Promise.all([...Object.keys(secrets_folder).map(
   async namespace => await configure(
     namespace,
     secrets_folder[namespace]
   )
-))
+), setInterval(
+  scheduledUpdate,
+  updateInterval
+)])
   .catch(err => console.error("Could not launch configuration", err))
-
-logger.info("Scheduling files touch")
-
-Promise.all(Object.keys(secrets_folder).map(
-  async namespace => await scheduleTouchFiles(secrets_folder[namespace])
-))
-  .catch(err => console.error("Could not schedule touch files", err))

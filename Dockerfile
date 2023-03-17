@@ -1,7 +1,13 @@
-FROM node
+FROM node:18.15.0
 
-COPY . /app
+COPY ./index.js ./package.json /app/
 
 WORKDIR /app
 
-CMD NODE_ENV=production node index.js
+RUN npm install .
+
+COPY ./config/docker_default.json /app/config/default.json
+
+ENV NODE_ENV=production
+
+CMD node index.js

@@ -1,8 +1,6 @@
 {
   "docker": { "socketPath": "/var/run/docker.sock"},
   "secret_folder": {
-    "testing": "./test_secrets",
-    "testing_nested": "./test_secrets/nested"
   },
   "logging": {
     "transport": {
@@ -22,5 +20,5 @@
       "prettyPrint"
     ]
   },
-  "updateInterval": 1000
+  "updateInterval": 5000
 }
