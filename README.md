@@ -1,7 +1,7 @@
 # Swarm UpdateD
 
 The Swarm UpdateD is a simple process that updates docker secrets depending on the latest modifications done on files
-present in a set of directories on the filesystem. For each file present in this directory, the process will watch for
+present in a set of directories on the filesystem. For each file present in each directory, the process will watch for
 any change performed during a configurable time period. This feature uses UNIX filesystem events, and may not work
 properly on Windows systems. If a change occured during this period on a file, then it proceeds to:
 
