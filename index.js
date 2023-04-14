@@ -3,7 +3,7 @@ import config from 'config';
 import Docker from 'dockerode';
 import { createLogger, config as wconfig, transports, format } from 'winston';
 import ecsFormat from '@elastic/ecs-winston-format'
-format['ecs'] = ecsFormat
+format['ecs'] = () => ecsFormat({ convertReqRes: true });
 
 const { combine } = format;
 const logger = createLogger({
@@ -91,7 +91,7 @@ async function updateServiceSecret(oldSecret, newSecretId, serviceResponse, vers
       }
     })
   } catch (err) {
-    console.error("Could not update service", serviceResponse.Spec.Name, err)
+    logger.error("Could not update service", { secret: serviceResponse.Spec.Name, err: err })
   }
 }
 
@@ -139,7 +139,7 @@ async function dockerSecretsUpdate (namespace, secret_name, folder_path, filenam
       logger.info("Removing stale secret: %s", existingSecrets[i].Spec.Name)
       await staleSecrets[i].remove()
     } catch (err) {
-      console.error("Could not remove secret: %s", existingSecrets[i].Spec.Name, err)
+      logger.error("Could not remove secret: %s", existingSecrets[i].Spec.Name, { err: err })
     }
   }
 }
@@ -212,4 +212,4 @@ Promise.all([...Object.keys(secrets_folder).map(
   scheduledUpdate,
   updateInterval + 10000
 )])
-  .catch(err => console.error("Could not launch configuration", err))
+  .catch(err => logger.error("Could not launch configuration", {err:err}))
