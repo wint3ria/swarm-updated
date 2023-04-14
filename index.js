@@ -2,6 +2,8 @@ import { readFile, watch, readdir, utimes } from "fs/promises";
 import config from 'config';
 import Docker from 'dockerode';
 import { createLogger, config as wconfig, transports, format } from 'winston';
+import ecsFormat from '@elastic/ecs-winston-format'
+format['ecs'] = ecsFormat
 
 const { combine } = format;
 const logger = createLogger({
@@ -11,7 +13,7 @@ const logger = createLogger({
           config.get("logging.transport.console").map(cfg => new transports.Console(cfg))
         : []
     ),
-    ...(config.has("logging.transport.File") ?
+    ...(config.has("logging.transport.file") ?
           config.get("logging.transport.file").map(cfg => new transports.File(cfg))
         : []
     ),

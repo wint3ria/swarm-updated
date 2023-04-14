@@ -19,7 +19,8 @@
     "formatters": [
       "timestamp",
       "splat",
-      "prettyPrint"
+      "prettyPrint",
+      "ecs"
     ]
   },
   "updateInterval": 1000
