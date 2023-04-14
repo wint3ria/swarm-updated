@@ -100,7 +100,7 @@ async function dockerSecretsUpdate (namespace, secret_name, folder_path, filenam
   const content = buffer.toString("base64")
   const versionLabelName = "updated.swarm." + namespace
   const existingSecrets = secrets.filter(secret => secret.Spec.Name.includes(secret_name))
-  existingSecrets.sort((a, b) => a.Spec.Name < b.Spec.Name ? -1 : 1);
+  existingSecrets.sort((a, b) => parseInt(a.Spec.Labels[versionLabelName]) < parseInt(b.Spec.Labels[versionLabelName]) ? 1 : -1);
   const existingSecret = existingSecrets.at(-1);
   const staleSecrets = await Promise.all(existingSecrets.slice(0, -1).map(async s => await docker.getSecret(s.ID)));
   if (existingSecret === undefined) {
@@ -129,7 +129,9 @@ async function dockerSecretsUpdate (namespace, secret_name, folder_path, filenam
     logger.info("Done updating services using old secret %s.%s", secret_name, oldLabelVersion)
     staleSecrets.push(secret)
   }
-
+  logger.info("Waiting 10 sec for the services to complete their update")
+  await later(10000)
+  logger.info("Done waiting for the update, start removing stale secrets")
   for (let i = 0; i < staleSecrets.length; i++) {
     try {
       logger.info("Removing stale secret: %s", existingSecrets[i].Spec.Name)
@@ -206,6 +208,6 @@ Promise.all([...Object.keys(secrets_folder).map(
   )
 ), setInterval(
   scheduledUpdate,
-  updateInterval
+  updateInterval + 10000
 )])
   .catch(err => console.error("Could not launch configuration", err))
