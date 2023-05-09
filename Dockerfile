@@ -1,6 +1,6 @@
 FROM node:18.15.0
 
-COPY ./index.js ./package.json /app/
+COPY ./index.js ./package.json ./src /app/
 
 WORKDIR /app
 

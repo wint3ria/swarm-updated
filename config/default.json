@@ -1,8 +1,8 @@
 {
   "docker": { "socketPath": "/var/run/docker.sock"},
   "secret_folder": {
-    "testing": "./test_secrets",
-    "testing_nested": "./test_secrets/nested"
+    "testing": "./secrets",
+    "testing_nested": "./secrets/nested"
   },
   "logging": {
     "transport": {
@@ -23,5 +23,9 @@
       "ecs"
     ]
   },
-  "updateInterval": 1000
+  "update_interval": 10000,
+  "update_detection_interval": 1000,
+  "max_versions": 1000,
+  "secret_wait_time": 10000,
+  "service_wait_time": 30000
 }
