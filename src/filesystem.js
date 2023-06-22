@@ -59,17 +59,6 @@ async function configure_md5_checks(namespace, folder_path) {
     await initialize_secrets_with_md5(namespace, folder_path);
     await later(config.get("md5_check_interval"));
   }
-
-  /*const watcher = watch(folder_path, { persistent: true})
-
-  watcher.on("all", async (event, path) => {
-    logger.debug("Event %s happening on file %s", event, path)
-  });*/
-
-  /*for await (const event of watcher) {
-    const { eventType, filename } = event
-    await file_event_handler(namespace, folder_path, eventType, filename)
-  }*/
 }
 
 async function configure_watcher(namespace, folder_path) {

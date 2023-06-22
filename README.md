@@ -2,8 +2,8 @@
 
 The Swarm UpdateD is a simple process that updates docker secrets depending on the latest modifications done on files
 present in a set of directories on the filesystem. For each file present in each directory, the process will watch for
-any change performed during a configurable time period. This feature uses UNIX filesystem events, and may not work
-properly on Windows systems. If a change occured during this period on a file, then it proceeds to:
+any change performed during a configurable time period. If a change occured during this period on a file, then it
+proceeds to:
 
 1. Generate a swarm secret name from the filename and a configurable namespace. For clarity sake, this name
 name will be referred to as the `identifier` for a secret.
@@ -17,6 +17,9 @@ UpdateD.
 
 The default time period between udapte checks is 5 seconds in the provided `fxia/swarm_updated` container, and 1 second
 in the provided testing configuration.
+
+Versions prior to v2.0.0 used to rely on filesystem events to detect and register modifications. This setup proved to be
+quite unreliable. As a result the service now actively check the md5sum with a configurable periodicity.
 
 I wrote this service because I had a process generating SSL certificates for various applications in my swarm stacks. I
 use this tool to perform an automatic renewal of such certificates. I am very open to suggestions. I am particularly
