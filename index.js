@@ -2,7 +2,7 @@ import config from 'config';
 
 import { logger } from './src/logging.js';
 import { later } from './src/utils.js';
-import { configure } from './src/filesystem.js';
+import { configure_md5_checks as configure } from './src/filesystem.js';
 import { update_services } from './src/services.js';
 import { updateTasks } from './src/filesystem.js';
 import {

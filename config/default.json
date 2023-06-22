@@ -19,13 +19,13 @@
     "formatters": [
       "timestamp",
       "splat",
-      "prettyPrint",
-      "ecs"
+      "prettyPrint"
     ]
   },
   "update_interval": 10000,
   "update_detection_interval": 1000,
   "max_versions": 1000,
   "secret_wait_time": 10000,
-  "service_wait_time": 30000
+  "service_wait_time": 30000,
+  "md5_check_interval": 5000
 }
